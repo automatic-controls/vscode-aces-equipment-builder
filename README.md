@@ -6,7 +6,7 @@ This extension provides syntax highlighting of configuration files written for A
 
 ## Example
 
-![Example](./images/example.png)
+![Example](https://raw.githubusercontent.com/cvogt729/aces-eb-language-support/main/images/example.png)
 
 ## Issues
 
