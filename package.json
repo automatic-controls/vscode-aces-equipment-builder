@@ -1,0 +1,64 @@
+{
+    "name": "aces-eb-language-support",
+    "version": "0.0.1",
+    "publisher": "aces",
+    "engines": {
+        "vscode": "^1.62.0"
+    },
+    "displayName": "ACES EB Language Support",
+    "description": "This extension provides syntax highlighting of configuration files written for ACES Equipment Builder.",
+    "categories": [
+        "Programming Languages"
+    ],
+    "license": "MIT",
+    "activationEvents": [
+        "onLanguage:acesebconfig"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "languages": [
+            {
+                "id": "acesebconfig",
+                "aliases": [
+                    "ACES EB Config",
+                    "acesebconfig"
+                ],
+                "extensions": [
+                    ".aceseb"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "acesebconfig",
+                "scopeName": "source.aceseb",
+                "path": "./syntaxes/acesebconfig.tmLanguage.json"
+            }
+        ]
+    },
+    "bugs": {
+        "email": "cvogt@automaticcontrols.net"
+    },
+    "icon": "",
+    "scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"pretest": "npm run compile && npm run lint",
+		"lint": "eslint src --ext ts"
+	},
+    "devDependencies": {
+        "@types/vscode": "^1.62.0",
+		"@types/glob": "^7.1.4",
+		"@types/mocha": "^9.0.0",
+		"@types/node": "14.x",
+		"@typescript-eslint/eslint-plugin": "^5.1.0",
+		"@typescript-eslint/parser": "^5.1.0",
+		"eslint": "^8.1.0",
+		"glob": "^7.1.7",
+		"mocha": "^9.1.3",
+		"typescript": "^4.4.4",
+		"@vscode/test-electron": "^1.6.2"
+    }
+}
