@@ -2,7 +2,7 @@
 
 ## Features
 
-This extension provides syntax highlighting of configuration files written for ACES Equipment Builder.
+This extension provides syntax highlighting of configuration files written for ACES Equipment Builder. View source code at https://github.com/cvogt729/aces-eb-language-support.git.
 
 ## Example
 

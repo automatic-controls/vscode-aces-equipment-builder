@@ -1,7 +1,7 @@
 {
-    "name": "aces-eb-language-support",
+    "name": "eb-language-support",
     "version": "0.0.1",
-    "publisher": "aces",
+    "publisher": "ACES",
     "engines": {
         "vscode": "^1.62.0"
     },
@@ -42,9 +42,9 @@
     },
     "repository":{
         "type":"git",
-        "url":"https://github.com/cvogt729/aces-eb-language-support"
+        "url":"https://github.com/cvogt729/aces-eb-language-support.git"
     },
-    "icon": "https://raw.githubusercontent.com/cvogt729/aces-eb-language-support/main/images/icon.png",
+    "icon": "icon.png",
     "scripts": {
 		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -p ./",
