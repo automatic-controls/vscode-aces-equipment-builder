@@ -40,6 +40,10 @@
     "bugs": {
         "email": "cvogt@automaticcontrols.net"
     },
+    "repository":{
+        "type":"git",
+        "url":"https://github.com/cvogt729/aces-eb-language-support"
+    },
     "icon": "https://raw.githubusercontent.com/cvogt729/aces-eb-language-support/main/images/icon.png",
     "scripts": {
 		"vscode:prepublish": "npm run compile",
