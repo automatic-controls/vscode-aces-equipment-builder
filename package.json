@@ -10,7 +10,7 @@
     "categories": [
         "Programming Languages"
     ],
-    "license": "MIT",
+    "license": "BSD-3-Clause",
     "activationEvents": [
         "onLanguage:acesebconfig"
     ],
