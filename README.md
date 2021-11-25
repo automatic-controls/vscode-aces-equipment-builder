@@ -1,13 +1,9 @@
-# ACES Equipment Builder Language Support
+# Language Support for ACES Equipment Builder
 
 ## Features
 
-This extension provides syntax highlighting of configuration files written for ACES Equipment Builder. View source code at https://github.com/cvogt729/aces-eb-language-support.git.
+This extension provides syntax highlighting of configuration files written for ACES Equipment Builder.
 
 ## Example
 
-![Example](https://raw.githubusercontent.com/cvogt729/aces-eb-language-support/main/images/example.png)
-
-## Issues
-
-Please email cvogt@automaticcontrols.net to report any bugs.
+![Example](https://github.com/automatic-controls/vscode-aces-equipment-builder/blob/main/images/example.png?raw=true)
