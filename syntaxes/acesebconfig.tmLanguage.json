@@ -19,7 +19,7 @@
 						"2":{
 							"patterns":[
 								{
-									"match":"\\(\\s*+([^,]++)\\s*+,\\s*+(-?+\\d++)\\s*+,\\s*+(-?+\\d++|(?i:-Inf))\\s*+,\\s*+(-?+\\d++)\\s*+,\\s*+(-?+\\d++|(?i:Inf))\\s*+\\)",
+									"match":"\\(\\s*+([^,]++)\\s*+,\\s*+(-?+\\d++)\\s*+,\\s*+(-?+\\d++|(?i:-Inf))\\s*+,\\s*+(\\d++)\\s*+,\\s*+(-?+\\d++|(?i:Inf))\\s*+\\)",
 									"captures":{
 										"1":{"patterns":[{"include":"#filename"}]},
 										"2":{"patterns":[{"name":"constant.numeric.aceseb","match":".++"}]},
@@ -29,7 +29,7 @@
 									}
 								},
 								{
-									"match":"\\(\\s*+(-?+\\d++)\\s*+,\\s*+(-?+\\d++|(?i:-Inf))\\s*+,\\s*+(-?+\\d++)\\s*+,\\s*+(-?+\\d++|(?i:Inf))\\s*+\\)",
+									"match":"\\(\\s*+(-?+\\d++)\\s*+,\\s*+(-?+\\d++|(?i:-Inf))\\s*+,\\s*+(\\d++)\\s*+,\\s*+(-?+\\d++|(?i:Inf))\\s*+\\)",
 									"captures":{
 										"1":{"patterns":[{"name":"constant.numeric.aceseb","match":".++"}]},
 										"2":{"patterns":[{"name":"constant.numeric.aceseb","match":".++"}]},
@@ -71,7 +71,7 @@
 					}
 				},
 				{
-					"match":"\\s*+([\\+\\-\\*@]*+)\\s*+([^\"]++)(?>(\".*\")\\s*+)?+$",
+					"match":"\\s*+([\\+\\-\\*@\\s]*+)([^\"]++)(?>(\".*\")\\s*+)?+$",
 					"captures":{
 						"1":{"patterns":[{"name":"storage.modifier","match":".++"}]},
 						"2":{
@@ -267,10 +267,10 @@
 		"ifThenItem":{
 			"patterns":[
 				{
-					"match":"((?>\\!\\+|!-|!\\*|!@|\\+|-|\\*|@)++|!)?+\\s*+(.++)",
+					"match":"((?>\\!\\+|!-|!\\*|!@|\\+|-|\\*|@|\\s)++|!)?+\\s*+(.++)",
 					"captures":{
 						"1":{"patterns":[{"name":"storage.modifier","match":".++"}]},
-						"2":{"patterns":[{"include":"#filename"}]}
+						"2":{"patterns":[{"include":"#referencePathNoGroup"}]}
 					}
 				}
 			]
@@ -419,6 +419,40 @@
 				}
 			]
 		},
+		"referencePathNoGroup":{
+			"patterns":[
+				{
+					"name":"variable.parameter.aceseb",
+					"match":"\\s*+(/|\\\\)?+(.*?)(/|\\\\)?+\\s*+$",
+					"captures":{
+						"1":{"patterns":[{"name":"keyword.operator.aceseb","match":".++"}]},
+						"2":{
+							"patterns":[
+								{
+									"name":"invalid.illegal.aceseb",
+									"match":"(?<=/|\\\\)\\s*+(?>/|\\\\)"
+								},
+								{
+									"match":"\\s*+(~)\\s*+($|/|\\\\)",
+									"captures":{
+										"1":{"patterns":[{"name":"keyword.other.aceseb","match":".++"}]},
+										"2":{"patterns":[{"name":"keyword.operator.aceseb","match":".++"}]}
+									}
+								},
+								{
+									"match":"([^/\\\\]++)($|/|\\\\)",
+									"captures":{
+										"1":{"patterns":[{"include":"#filename"}]},
+										"2":{"patterns":[{"name":"keyword.operator.aceseb","match":".++"}]}
+									}
+								}
+							]
+						},
+						"3":{"patterns":[{"name":"invalid.illegal.aceseb","match":".++"}]}
+					}
+				}
+			]
+		},
 		"setProperties":{
 			"patterns":[
 				{
@@ -464,7 +498,7 @@
 			"patterns":[
 				{
 					"name":"constant.character.escape.aceseb",
-					"match":"<\\s*+([^<>\\|]*+)\\|\\s*+([a-zA-Z]++)\\s*+>",
+					"match":"<\\s*+([^<>\\|]*+)\\|\\s*+([a-zA-Z@]++)\\s*+>",
 					"captures":{
 						"1":{"patterns":[{"include":"#referencePath"}]},
 						"2":{"patterns":[{"include":"#getPropertyNames"}]}
@@ -476,7 +510,7 @@
 			"patterns":[
 				{
 					"name":"constant.language.aceseb",
-					"match":"\\s*+(?i:SELECTED|VISIBLE|LOCKED|VALUECHANGING|EXISTS|VALUE|MIN|MAX|MINIMUM|MAXIMUM|INCREMENT|DISPLAYNAME|REFERENCENAME|EQUIPMENTNAME|FILEPATH)\\s*+$"
+					"match":"\\s*+(?i:@SELECTED|@VISIBLE|SELECTED|VISIBLE|LOCKED|VALUECHANGING|EXISTS|VALUE|MIN|MAX|MINIMUM|MAXIMUM|INCREMENT|DISPLAYNAME|REFERENCENAME|EQUIPMENTNAME|FILEPATH)\\s*+$"
 				},
 				{"name":"invalid.illegal.aceseb","match":".++"}
 			]
