@@ -1,10 +1,9 @@
 .vscode/**
 src/**
-images/**
+images/!(icon.png)
 **/*.ts
 **/*.map
 **/tsconfig.json
-**/.eslintrc.json
-*.vsix
+**/*.vsix
 .gitignore
 .gitattributes

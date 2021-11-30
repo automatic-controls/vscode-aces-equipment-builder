@@ -1,4 +1,3 @@
-import { CharacterEncoding } from 'crypto';
 import * as vscode from 'vscode';
 export function activate(context: vscode.ExtensionContext){
   const groupMatcher = new RegExp("^\\s*Group\\([^\\(\\)]*\\)\\[\\s*$");
