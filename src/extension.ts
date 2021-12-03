@@ -6,9 +6,182 @@ export function activate(context: vscode.ExtensionContext){
   const valueMatcher = new RegExp("^\\s*(?:///\\s*)?Value\\(.*?\\)\\s*$");
   const conditionMatcher = new RegExp("^\\s*(?:///\\s*)?Condition\\(.*?\\)\\s*$");
   const ifThenMatcher = new RegExp("^\\s*(?:If ?\\[|\\]( ?)Then\\1\\[)\\s*$", "i");
-  //TODO - add error checking and auto-completion for ref names and paths
-  //TODO - add auto-completion for <path|var> variables
-  context.subscriptions.push(vscode.languages.registerHoverProvider('acesebconfig',{
+  const numMatcher = new RegExp("^\\d+$");
+  const completionList:vscode.CompletionItem[] = [
+    {label:"SELECTED", kind:vscode.CompletionItemKind.Property, detail:"Whether this item is selected to be included in script generation."},
+    {label:"@SELECTED", kind:vscode.CompletionItemKind.Property, detail:"Whether this item is selected. Ignores parent properties."},
+    {label:"VISIBLE", kind:vscode.CompletionItemKind.Property, detail:"Whether this item is visible to the user in the application."},
+    {label:"@VISIBLE", kind:vscode.CompletionItemKind.Property, detail:"Whether this item is visible. Ignores parent properties."},
+    {label:"LOCKED", kind:vscode.CompletionItemKind.Property, detail:"Whether this item is locked."},
+    {label:"VALUECHANGING", kind:vscode.CompletionItemKind.Property, detail:"Whether this item's value is currently controlled by the arrow keys."},
+    {label:"EXISTS", kind:vscode.CompletionItemKind.Property, detail:"Whether this item exists."},
+    {label:"VALUE", kind:vscode.CompletionItemKind.Property, detail:"The integral value given to this item by the user."},
+    {label:"MIN", kind:vscode.CompletionItemKind.Property, detail:"The minimum value as specified by a `Value` statement."},
+    {label:"MINIMUM", kind:vscode.CompletionItemKind.Property, detail:"The minimum value as specified by a `Value` statement."},
+    {label:"MAX", kind:vscode.CompletionItemKind.Property, detail:"The maximum value as specified by a `Value` statement."},
+    {label:"MAXIMUM", kind:vscode.CompletionItemKind.Property, detail:"The maximum value as specified by a `Value` statement."},
+    {label:"INCREMENT", kind:vscode.CompletionItemKind.Property, detail:"The increment as specified by a `Value` statement."},
+    {label:"DISPLAYNAME", kind:vscode.CompletionItemKind.Property, detail:"The display name of an item as shown in the application."},
+    {label:"REFERENCENAME", kind:vscode.CompletionItemKind.Property, detail:"The reference name of an item."},
+    {label:"EQUIPMENTNAME", kind:vscode.CompletionItemKind.Property, detail:"The equipment name entered into the application by the user."},
+    {label:"FILEPATH", kind:vscode.CompletionItemKind.Property, detail:"The filepath of the locally stored file corresponding to an item."}
+  ]
+  context.subscriptions.push(vscode.languages.registerSignatureHelpProvider("acesebconfig", {
+    provideSignatureHelp(document, position, token, context):vscode.SignatureHelp|undefined{
+      return {
+        activeParameter:0,
+        activeSignature:0,
+        signatures:[
+          {
+            label:"Value(item, def, min, inc, max)",
+            parameters:[
+              {label:"item"},
+              {label:"def", documentation:"The default value."},
+              {label:"min", documentation:"The minimum value."},
+              {label:"inc", documentation:"The increment used for value modification."},
+              {label:"max", documentation:"The maximum value."}
+            ]
+          },
+          {
+            label:"Value(def, min, inc, max)",
+            parameters:[
+              {label:"def", documentation:"The default value."},
+              {label:"min", documentation:"The minimum value."},
+              {label:"inc", documentation:"The increment used for value modification."},
+              {label:"max", documentation:"The maximum value."}
+            ]
+          }
+        ]
+      }
+      const line = document.lineAt(position.line).text;
+      const len = line.length;
+      var c:string;
+      var i:number;
+      var paramNum = 0;
+      var startParen = 0;
+      var endParen = 0;
+      var totalParams = 1;
+      for (i=position.character-1;i>=0;++i){
+        c = line.charAt(i);
+        if (c==','){
+          ++paramNum;
+        }else if (c=='('){
+          startParen = i;
+          break;
+        }
+      }
+      if (startParen==0){
+        return;
+      }
+      var firstParam = "";
+      var b = true;
+      for (i=startParen+1;i<len;++i){
+        c = line.charAt(i);
+        if (c==','){
+          b = false;
+          ++totalParams;
+        }else if (c==')'){
+          endParen = i;
+          break;
+        }else if (b){
+          firstParam+=c;
+        }
+      }
+      if (endParen==0){
+        return;
+      }
+      firstParam = firstParam.trim();
+      if (true||valueMatcher.test(line)){
+        return {
+          activeParameter:paramNum,
+          activeSignature:(!numMatcher.test(firstParam)||totalParams>4)?0:1,
+          signatures:[
+            {
+              label:"Value(item, def, min, inc, max)",
+              parameters:[
+                {label:"item"},
+                {label:"def", documentation:"The default value."},
+                {label:"min", documentation:"The minimum value."},
+                {label:"inc", documentation:"The increment used for value modification."},
+                {label:"max", documentation:"The maximum value."}
+              ]
+            },
+            {
+              label:"Value(def, min, inc, max)",
+              parameters:[
+                {label:"def", documentation:"The default value."},
+                {label:"min", documentation:"The minimum value."},
+                {label:"inc", documentation:"The increment used for value modification."},
+                {label:"max", documentation:"The maximum value."}
+              ]
+            }
+          ]
+        }
+      }else{
+        return;
+      }
+    }
+  }, ",", "("));
+  context.subscriptions.push(vscode.languages.registerCompletionItemProvider("acesebconfig", {
+    provideCompletionItems(document, position, token, context){
+      const line = document.lineAt(position.line).text;
+      var b = false;
+      var c:string;
+      var i:number;
+      switch (context.triggerCharacter){
+        case '|': {
+          for (i = position.character-2;i>=0;--i){
+            c = line.charAt(i);
+            if (c==='<'){
+              b = true;
+              break;
+            }else if (c==='|' || c==='>'){
+              break;
+            }
+          }
+          if (b){
+            return completionList;
+          }else{
+            return;
+          }
+        }
+        case ' ': {
+          for (i = position.character-1;i>=0;--i){
+            c = line.charAt(i);
+            if (c==='|'){
+              b = true;
+              break;
+            }else if (c!==' '){
+              break;
+            }
+          }
+          if (b){
+            b = false;
+            for (i--;i>=0;--i){
+              c = line.charAt(i);
+              if (c==='<'){
+                b = true;
+                break;
+              }else if (c==='|' || c==='>'){
+                break;
+              }
+            }
+            if (b){
+              return completionList;
+            }else{
+              return;
+            }
+          }else{
+            return;
+          }
+        }
+        default: {
+          return;
+        }
+      }
+    }
+  }, "|", " "));
+  context.subscriptions.push(vscode.languages.registerHoverProvider("acesebconfig",{
     provideHover(document, position, token){
       const r = document.getWordRangeAtPosition(position);
       if (r===undefined){
