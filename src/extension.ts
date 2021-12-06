@@ -1,12 +1,13 @@
 import * as vscode from 'vscode';
 export function activate(context: vscode.ExtensionContext){
-  const groupMatcher = new RegExp("^\\s*Group\\([^\\(\\)]*\\)\\[\\s*$");
+  const groupMatcher = new RegExp("^\\s*Group\\([^\\(\\)]*\\)\\[?\\s*$");
   const groupRefMatcher = new RegExp("^\\(\\s*\\d+\\s*,\\s*\\d+\\s*\\)");
-  const scriptMatcher = new RegExp("^\\s*(?:PreScript|PostScript)\\([^\\(\\)]*\\)\\[\\s*$");
+  const scriptMatcher = new RegExp("^\\s*(?:PreScript|PostScript)\\([^\\(\\)]*\\)\\[?\\s*$");
   const valueMatcher = new RegExp("^\\s*(?:///\\s*)?Value\\(.*?\\)\\s*$");
   const conditionMatcher = new RegExp("^\\s*(?:///\\s*)?Condition\\(.*?\\)\\s*$");
   const ifThenMatcher = new RegExp("^\\s*(?:If ?\\[|\\]( ?)Then\\1\\[)\\s*$", "i");
   const numMatcher = new RegExp("^\\d+$");
+  const filenameMatcher = new RegExp("^[a-zA-Z0-9_ ]*$");
   const completionList:vscode.CompletionItem[] = [
     {label:"SELECTED", kind:vscode.CompletionItemKind.Property, detail:"Whether this item is selected to be included in script generation."},
     {label:"@SELECTED", kind:vscode.CompletionItemKind.Property, detail:"Whether this item is selected. Ignores parent properties."},
@@ -28,31 +29,6 @@ export function activate(context: vscode.ExtensionContext){
   ]
   context.subscriptions.push(vscode.languages.registerSignatureHelpProvider("acesebconfig", {
     provideSignatureHelp(document, position, token, context):vscode.SignatureHelp|undefined{
-      return {
-        activeParameter:0,
-        activeSignature:0,
-        signatures:[
-          {
-            label:"Value(item, def, min, inc, max)",
-            parameters:[
-              {label:"item"},
-              {label:"def", documentation:"The default value."},
-              {label:"min", documentation:"The minimum value."},
-              {label:"inc", documentation:"The increment used for value modification."},
-              {label:"max", documentation:"The maximum value."}
-            ]
-          },
-          {
-            label:"Value(def, min, inc, max)",
-            parameters:[
-              {label:"def", documentation:"The default value."},
-              {label:"min", documentation:"The minimum value."},
-              {label:"inc", documentation:"The increment used for value modification."},
-              {label:"max", documentation:"The maximum value."}
-            ]
-          }
-        ]
-      }
       const line = document.lineAt(position.line).text;
       const len = line.length;
       var c:string;
@@ -61,64 +37,287 @@ export function activate(context: vscode.ExtensionContext){
       var startParen = 0;
       var endParen = 0;
       var totalParams = 1;
-      for (i=position.character-1;i>=0;++i){
+      for (i=position.character-1;i>=0;--i){
         c = line.charAt(i);
-        if (c==','){
+        if (c===','){
           ++paramNum;
-        }else if (c=='('){
+        }else if (c==='('){
           startParen = i;
           break;
         }
       }
-      if (startParen==0){
+      if (startParen===0){
         return;
       }
       var firstParam = "";
       var b = true;
       for (i=startParen+1;i<len;++i){
         c = line.charAt(i);
-        if (c==','){
+        if (c===','){
           b = false;
           ++totalParams;
-        }else if (c==')'){
+        }else if (c===')'){
           endParen = i;
           break;
         }else if (b){
-          firstParam+=c;
+          firstParam = firstParam.concat(c);
         }
       }
-      if (endParen==0){
+      if (endParen===0 || position.character>endParen){
         return;
       }
       firstParam = firstParam.trim();
-      if (true||valueMatcher.test(line)){
-        return {
-          activeParameter:paramNum,
-          activeSignature:(!numMatcher.test(firstParam)||totalParams>4)?0:1,
-          signatures:[
-            {
-              label:"Value(item, def, min, inc, max)",
-              parameters:[
-                {label:"item"},
-                {label:"def", documentation:"The default value."},
-                {label:"min", documentation:"The minimum value."},
-                {label:"inc", documentation:"The increment used for value modification."},
-                {label:"max", documentation:"The maximum value."}
-              ]
-            },
-            {
-              label:"Value(def, min, inc, max)",
-              parameters:[
-                {label:"def", documentation:"The default value."},
-                {label:"min", documentation:"The minimum value."},
-                {label:"inc", documentation:"The increment used for value modification."},
-                {label:"max", documentation:"The maximum value."}
-              ]
-            }
-          ]
+      const active = context.activeSignatureHelp
+      if (active){
+        active.activeParameter = paramNum;
+      }
+      if (valueMatcher.test(line)){
+        if (active){
+          if (totalParams>4){
+            active.activeSignature = 0;
+          }else if (firstParam.length!==0){
+            active.activeSignature = numMatcher.test(firstParam)?1:0;
+          }
+          return active;
+        }else{
+          return {
+            activeParameter:paramNum,
+            activeSignature:(!numMatcher.test(firstParam)||totalParams>4)?0:1,
+            signatures:[
+              {
+                label:"Value(item, def, min, inc, max)",
+                parameters:[
+                  {label:"item", documentation:"The item this statement applies to."},
+                  {label:"def", documentation:"The default value."},
+                  {label:"min", documentation:"The minimum value."},
+                  {label:"inc", documentation:"The increment used for value modification."},
+                  {label:"max", documentation:"The maximum value."}
+                ],
+                documentation:new vscode.MarkdownString(
+                  " **Description**  \n"+
+                  " - If `item` is selected in the application, then arrow keys may be used to change the `VALUE` parameter corresponding to `item`."+
+                  " The arrow keys increase or decrease `VALUE` by `inc` with each keystoke."+
+                  " `VALUE` is constrained to lie between `min` and `max` (inclusive)."+
+                  " `VALUE` is given the default value `def` on initialization.  \n"+
+                  " - It is recommended to show `VALUE` in the display name of `item`.  \n"+
+                  " **Parameters**  \n"+
+                  " - `item` - Indicates the item that this statement applies to.  \n"+
+                  " - `def` - The default value.  \n"+
+                  "   - Any integer that satisfies `min<=def<=max`.  \n"+
+                  " - `min` - The minimum value.  \n"+
+                  "   - Any integer or `-INF` to specify negative infinity.  \n"+
+                  " - `inc` - The increment used for value modification.  \n"+
+                  "   - Any positive integer.  \n"+
+                  " - `max` - The maximum value.  \n"+
+                  "   - Any integer or `INF` to specify infinity."
+                )
+              },
+              {
+                label:"Value(def, min, inc, max)",
+                parameters:[
+                  {label:"def", documentation:"The default value."},
+                  {label:"min", documentation:"The minimum value."},
+                  {label:"inc", documentation:"The increment used for value modification."},
+                  {label:"max", documentation:"The maximum value."}
+                ],
+                documentation:new vscode.MarkdownString(
+                  " **Description**  \n"+
+                  " - When the folder containing this configuration file is selected in the application, then arrow keys may be used to change the `VALUE` parameter."+
+                  " The arrow keys increase or decrease `VALUE` by `inc` with each keystoke."+
+                  " `VALUE` is constrained to lie between `min` and `max` (inclusive)."+
+                  " `VALUE` is given the default value `def` on initialization.  \n"+
+                  " - It is recommended to show `VALUE` in the display name.  \n"+
+                  " **Parameters**  \n"+
+                  " - `def` - The default value.  \n"+
+                  "   - Any integer that satisfies `min<=def<=max`.  \n"+
+                  " - `min` - The minimum value.  \n"+
+                  "   - Any integer or `-INF` to specify negative infinity.  \n"+
+                  " - `inc` - The increment used for value modification.  \n"+
+                  "   - Any positive integer.  \n"+
+                  " - `max` - The maximum value.  \n"+
+                  "   - Any integer or `INF` to specify infinity."
+                )
+              }
+            ]
+          }
+        }
+      }else if (conditionMatcher.test(line)){
+        if (active){
+          if (totalParams>2){
+            active.activeSignature = 0;
+          }else if (firstParam.length!==0){
+            active.activeSignature = filenameMatcher.test(firstParam)?0:1;
+          }
+          return active;
+        }else{
+          return {
+            activeParameter:paramNum,
+            activeSignature:(filenameMatcher.test(firstParam)||totalParams>2)?0:1,
+            signatures:[
+              {
+                label:"Condition(item, expr, \"msg\")",
+                parameters:[
+                  {label:"item", documentation:"The item this statement applies to."},
+                  {label:"expr", documentation:"The boolean expression to enforce as a required condition."},
+                  {label:"msg", documentation:"The error message to display when the expression fails to be satisfied."}
+                ],
+                documentation:new vscode.MarkdownString(
+                  " **Description**  \n"+
+                  " - Specifies a condition (`expr`) that must be satisfied in order to generate a script."+
+                  " If `expr` is not satisfied, then `msg` will be shown to the user as an error message."+
+                  " Conditions are evaluated only when the corresponding `item` is selected.  \n"+
+                  " **Parameters**  \n"+
+                  " - `item` - Indicates the item that this statement applies to."+
+                  " If `item` is unspecified, then this statement applies to the parent directory (as specified by the location of this configuration file).  \n"+
+                  " - `expr` - Any expression evaluating to `1` (true) or `0` (false). Paths in `expr` are resolved relative to `item`.  \n"+
+                  " - `msg` - The error message to display if `expr` evaluates to `0` (false) when attempting to generate an EIKON script. Note this parameter must be enclosed in double quotes."
+                )
+              },
+              {
+                label:"Condition(expr, \"msg\")",
+                parameters:[
+                  {label:"expr", documentation:"The boolean expression to enforce as a required condition."},
+                  {label:"msg", documentation:"The error message to display when the expression fails to be satisfied."}
+                ],
+                documentation:new vscode.MarkdownString(
+                  " **Description**  \n"+
+                  " - Specifies a condition (`expr`) that must be satisfied in order to generate a script."+
+                  " If `expr` is not satisfied, then `msg` will be shown to the user as an error message."+
+                  " Conditions are evaluated only when the parent directory is selected (as specified by the location of this configuration file).  \n"+
+                  " **Parameters**  \n"+
+                  " - `expr` - Any expression evaluating to `1` (true) or `0` (false). Paths in `expr` are resolved relative to `item`.  \n"+
+                  " - `msg` - The error message to display if `expr` evaluates to `0` (false) when attempting to generate an EIKON script. Note this parameter must be enclosed in double quotes."
+                )
+              }
+            ]
+          };
+        }
+      }else if (groupMatcher.test(line)){
+        if (active){
+          if (totalParams>1){
+            active.activeSignature = 0;
+          }
+          return active;
+        }else{
+          return {
+            activeParameter:paramNum,
+            activeSignature:(firstParam.length==0||totalParams>1)?0:1,
+            signatures:[
+              {
+                label:"Group(min, max)[ ... ]",
+                parameters:[
+                  {label:"min", documentation:"The minimum number of selections to enforce."},
+                  {label:"max", documentation:"The maximum number of selections to enforce."}
+                ],
+                documentation:new vscode.MarkdownString(
+                  " **Description**  \n"+
+                  " - Specifies a grouping of items which affects the application in the following ways.  \n"+
+                  "   - If less than `min` items are selected, then grouped items are shown in red, and script generation is disabled.  \n"+
+                  "   - When `max` items are selected, the leftover items are hidden, effectively preventing the user from exceeding `max` selections.  \n"+
+                  " **Parameters**  \n"+
+                  " - `min` - The minimum number of selections to enforce for this grouping.  \n"+
+                  "   - Any positive integer.  \n"+
+                  " - `max` - The maximum number of selections to enforce for this grouping.  \n"+
+                  "   - Any positive integer or `INF` to specify infinity."
+                )
+              },
+              {
+                label:"Group(max)[ ... ]",
+                parameters:[
+                  {label:"max", documentation:"The maximum number of selections to enforce."}
+                ],
+                documentation:new vscode.MarkdownString(
+                  " **Description**  \n"+
+                  " - Specifies a grouping of items which affects the application in the following way.  \n"+
+                  "   - When `max` items are selected, the leftover items are hidden, effectively preventing the user from exceeding `max` selections.  \n"+
+                  " **Parameters**  \n"+
+                  " - `max` - The maximum number of selections to enforce for this grouping.  \n"+
+                  "   - Any positive integer or `INF` to specify infinity."
+                )
+              }
+            ]
+          };
         }
       }else{
-        return;
+        const wordRange = document.getWordRangeAtPosition(new vscode.Position(position.line, startParen-1));
+        if (wordRange){
+          const word = document.getText(wordRange);
+          switch (word.toUpperCase()){
+            case "GROUP": {
+              if (active){
+                return active;
+              }else{
+                return {
+                  activeParameter:paramNum,
+                  activeSignature:0,
+                  signatures:[
+                    {
+                      label:"...\\Group(n,m)\\...",
+                      parameters:[
+                        {label:"n", documentation:"Refers to the nth grouping defined in the configuration file of the previous item."},
+                        {label:"m", documentation:"Refers to the mth selected element of the group specified by n."}
+                      ],
+                      documentation:new vscode.MarkdownString(
+                        " **Description**  \n"+
+                        " - This syntax may be used as an element of a relative or absolute path to refer to the `mth` selected item of the `nth` group.  \n"+
+                        " **Parameters**  \n"+
+                        " - `n` - Refers to the `nth` grouping defined in the configuration file of the previous item.  \n"+
+                        "   - Any positive integer.  \n"+
+                        " - `m` - Refers to the `mth` selected element of the group specified by `n`.  \n"+
+                        "   - Any positive integer."
+                      )
+                    }
+                  ]
+                };
+              }
+            }
+            case "PRESCRIPT": case "POSTSCRIPT": {
+              if (scriptMatcher.test(line)){
+                if (active){
+                  if (firstParam.length!=0){
+                    active.activeSignature = 0;
+                  }
+                  return active;
+                }else{
+                  return {
+                    activeParameter:paramNum,
+                    activeSignature:firstParam.length==0?1:0,
+                    signatures:[
+                      {
+                        label:word+"(item)",
+                        parameters:[
+                          {label:"item", documentation:"The item this statement pertains to."}
+                        ],
+                        documentation:new vscode.MarkdownString(
+                          " **Desciption**  \n"+
+                          " - Specifies a codeblock that is included in the generated EIKON script when `item` is selected."+
+                          " The application recursively generates the script using a depth-first search starting with the root library folder."+
+                          " `PreScript`/`PostScript` codeblocks are included before/after `item`'s children are processed, respectively.  \n"+
+                          " - `[< path | variable >]` constructs may be used to reference application variables within codeblocks."+
+                          " `path` is resolved relative to `item`.  \n"+
+                          " **Parameters**  \n"+
+                          " - `item` - When `item` is selected, the contents of this codeblock will be included in the generated script."
+                        )
+                      },
+                      {
+                        label:word+"()",
+                        parameters:[],
+                        documentation:new vscode.MarkdownString(
+                          " **Desciption**  \n"+
+                          " - Specifies a codeblock that is included in the generated EIKON script when the parent directory is selected (as specified by the location of this configuration file)."+
+                          " The application recursively generates the script using a depth-first search starting with the root library folder."+
+                          " `PreScript`/`PostScript` codeblocks are included before/after children are processed, respectively.  \n"+
+                          " - `[< path | variable >]` constructs may be used to reference application variables within codeblocks."+
+                          " `path` is resolved relative to the parent directory."
+                        )
+                      }
+                    ]
+                  };
+                }
+              }
+            }
+          }
+        }
       }
     }
   }, ",", "("));
@@ -479,7 +678,7 @@ export function activate(context: vscode.ExtensionContext){
               " The arrow keys increase or decrease `VALUE` by `inc` with each keystoke."+
               " `VALUE` is constrained to lie between `min` and `max` (inclusive)."+
               " `VALUE` is given the default value `def` on initialization.  \n"+
-              " - For transparency, it is recommended to show `VALUE` in the display name of `item`.  \n"+
+              " - It is recommended to show `VALUE` in the display name of `item`.  \n"+
               " **Example**  \n"
             );
             markdown.appendCodeblock("item \"Item[<|SELECTED>? <|VALUE>:]\"\nValue(item, 0, 0, 1, 10)", "acesebconfig");
