@@ -391,7 +391,7 @@
 								},
 								{
 									"name":"keyword.other.aceseb",
-									"match":"\\s*+Group\\(\\s*+(\\d++)\\s*+,\\s*+(\\d++)\\s*+\\)\\s*+($|/|\\\\)",
+									"match":"\\s*+(?i:Group)\\(\\s*+(\\d++)\\s*+,\\s*+(\\d++)\\s*+\\)\\s*+($|/|\\\\)",
 									"captures":{
 										"1":{"patterns":[{"name":"constant.numeric.aceseb","match":".++"}]},
 										"2":{"patterns":[{"name":"constant.numeric.aceseb","match":".++"}]},
