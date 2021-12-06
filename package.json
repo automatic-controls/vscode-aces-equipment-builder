@@ -44,7 +44,7 @@
         "type":"git",
         "url":"https://github.com/automatic-controls/vscode-aces-equipment-builder.git"
     },
-    "icon": "./images/icon.png",
+    "icon": "images/icon.png",
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
