@@ -71,7 +71,7 @@
 					}
 				},
 				{
-					"match":"\\s*+([\\+\\-\\*@\\s]*+)([^\"]++)(?>(\".*\")\\s*+)?+$",
+					"match":"\\s*+([\\+\\-\\*\\s]*+)([^@\"]++)(?>(\".*\")\\s*+)?+$",
 					"captures":{
 						"1":{"patterns":[{"name":"storage.modifier","match":".++"}]},
 						"2":{
@@ -82,6 +82,18 @@
 										"1":{"patterns":[{"include":"#referencePath"}]}
 									}
 								},
+								{"include":"#filename"}
+							]
+						},
+						"3":{"patterns":[{"include":"#string"}]}
+					}
+				},
+				{
+					"match":"\\s*+([\\+\\-\\*@\\s]*+)([^\"]++)(?>(\".*\")\\s*+)?+$",
+					"captures":{
+						"1":{"patterns":[{"name":"storage.modifier","match":".++"}]},
+						"2":{
+							"patterns":[
 								{"include":"#filename"}
 							]
 						},
