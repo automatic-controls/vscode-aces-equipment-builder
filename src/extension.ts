@@ -14,8 +14,8 @@ export function activate(context: vscode.ExtensionContext){
     {label:"VISIBLE", kind:vscode.CompletionItemKind.Property, detail:"Whether this item is visible to the user in the application."},
     {label:"@VISIBLE", kind:vscode.CompletionItemKind.Property, detail:"Whether this item is visible. Ignores parent properties."},
     {label:"LOCKED", kind:vscode.CompletionItemKind.Property, detail:"Whether this item is locked."},
-    {label:"VALUECHANGING", kind:vscode.CompletionItemKind.Property, detail:"Whether this item's value is currently controlled by the arrow keys."},
     {label:"EXISTS", kind:vscode.CompletionItemKind.Property, detail:"Whether this item exists."},
+    {label:"VALUECHANGING", kind:vscode.CompletionItemKind.Property, detail:"Whether this item's value is currently controlled by the arrow keys."},
     {label:"VALUE", kind:vscode.CompletionItemKind.Property, detail:"The integral value given to this item by the user."},
     {label:"MIN", kind:vscode.CompletionItemKind.Property, detail:"The minimum value as specified by a `Value` statement."},
     {label:"MINIMUM", kind:vscode.CompletionItemKind.Property, detail:"The minimum value as specified by a `Value` statement."},
@@ -284,7 +284,7 @@ export function activate(context: vscode.ExtensionContext){
                     activeSignature:firstParam.length==0?1:0,
                     signatures:[
                       {
-                        label:word+"(item)",
+                        label:word+"(item)[ ... ]",
                         parameters:[
                           {label:"item", documentation:"The item this statement pertains to."}
                         ],
@@ -557,10 +557,10 @@ export function activate(context: vscode.ExtensionContext){
                     "   - Whether this item is visible. Ignores parent properties.  \n"+
                     " - `LOCKED`  \n"+
                     "   - Whether this item is locked.  \n"+
-                    " - `VALUECHANGING`  \n"+
-                    "   - Whether this item's value is currently controlled by the arrow keys.  \n"+
                     " - `EXISTS`  \n"+
                     "   - Whether this item exists.  \n"+
+                    " - `VALUECHANGING`  \n"+
+                    "   - Whether this item's value is currently controlled by the arrow keys.  \n"+
                     " - `VALUE`  \n"+
                     "   - The integral value given to this item by the user.  \n"+
                     " - `MIN`  \n"+
@@ -637,8 +637,8 @@ export function activate(context: vscode.ExtensionContext){
           if (scriptMatcher.test(line)){
             markdown.appendMarkdown(
               " **Usage**  \n"+
-              " - `"+word+"(item)`  \n"+
-              " - `"+word+"()`  \n"+
+              " - `"+word+"(item)[ ... ]`  \n"+
+              " - `"+word+"()[ ... ]`  \n"+
               " **Parameters**  \n"+
               " - `item` - When `item` is selected, the contents of this codeblock will be included in the generated script."+
               " If `item` is unspecified, then contents are included whenever the parent directory is selected (as specified by the location of this configuration file).  \n"+
