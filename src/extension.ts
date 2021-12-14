@@ -1,3 +1,8 @@
+/*
+  BSD 3-Clause License
+  Copyright (c) 2021, Automatic Controls Equipment Systems, Inc.
+  Author: Cameron Vogt (cvogt729)
+*/
 import * as vscode from 'vscode';
 export function activate(context: vscode.ExtensionContext){
   const groupMatcher = new RegExp("^\\s*Group\\([^\\(\\)]*\\)\\[?\\s*$");
@@ -382,7 +387,7 @@ export function activate(context: vscode.ExtensionContext){
   }, "|", " "));
   context.subscriptions.push(vscode.languages.registerHoverProvider("acesebconfig",{
     provideHover(document, position, token){
-      const r = document.getWordRangeAtPosition(position);
+      const r = document.getWordRangeAtPosition(position, /[@A-Za-z0-9_]+/);
       if (r===undefined){
         return;
       }
