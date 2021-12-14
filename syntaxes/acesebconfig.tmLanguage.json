@@ -531,7 +531,7 @@
 			"patterns":[
 				{
 					"name":"constant.character.escape.aceseb",
-					"match":"\\{(\\d+)\\}",
+					"match":"\\{([a-fA-F0-9]+)\\}",
 					"captures":{
 						"1":{
 							"patterns":[{"name":"constant.numeric.aceseb","match":".++"}]
